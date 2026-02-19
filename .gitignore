@@ -1,0 +1,25 @@
+# Database configuration with credentials
+config/database.php
+
+# Uploaded files
+uploads/
+
+# Testing files
+test.php
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# PHP
+*.log
+
+# Node dependencies (if applicable)
+node_modules/
