@@ -33,9 +33,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-    $sql = "INSERT INTO items 
-            (user_id, type, name, description, category, location, date, image_path) 
-            VALUES (?, 'lost', ?, ?, ?, ?, ?, ?)";
+    $sql = "INSERT INTO items
+        (user_id, type, item_name, description, category, location, date, image)
+        VALUES (?, 'lost', ?, ?, ?, ?, ?, ?)";
+
 
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("issssss", $user_id, $name, $description, $category, $location, $date, $image_path);
