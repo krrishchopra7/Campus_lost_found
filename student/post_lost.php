@@ -7,81 +7,108 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+$message = '';
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $user_id = (int) $_SESSION['user_id'];
+    $item_name = trim($_POST['name'] ?? '');
+    $description = trim($_POST['description'] ?? '');
+    $category = trim($_POST['category'] ?? '');
+    $location = trim($_POST['location'] ?? '');
+    $date = $_POST['date'] ?? null;
 
-    $user_id = $_SESSION['user_id'];
-    $name = $_POST['name'];
-    $description = $_POST['description'];
-    $category = $_POST['category'];
-    $location = $_POST['location'];
-    $date = $_POST['date'];
+    $image = null;
 
-    $image_path = NULL;
-
-    // Handle image upload (optional)
-    if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-
+    if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
         $target_dir = "../uploads/";
+        if (!is_dir($target_dir)) {
+            mkdir($target_dir, 0777, true);
+        }
+
         $file_name = time() . "_" . basename($_FILES["image"]["name"]);
         $target_file = $target_dir . $file_name;
-
         $allowed_types = ['image/jpeg', 'image/png', 'image/jpg'];
 
-        if (in_array($_FILES['image']['type'], $allowed_types)) {
-            move_uploaded_file($_FILES["image"]["tmp_name"], $target_file);
-            $image_path = "uploads/" . $file_name;
+        if (in_array($_FILES['image']['type'], $allowed_types, true)) {
+            if (move_uploaded_file($_FILES["image"]["tmp_name"], $target_file)) {
+                $image = "uploads/" . $file_name;
+            }
         }
     }
 
     $sql = "INSERT INTO items
-        (user_id, type, item_name, description, category, location, date, image)
-        VALUES (?, 'lost', ?, ?, ?, ?, ?, ?)";
-
+            (user_id, type, item_name, description, category, location, date, image)
+            VALUES (?, 'lost', ?, ?, ?, ?, ?, ?)";
 
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("issssss", $user_id, $name, $description, $category, $location, $date, $image_path);
+    $stmt->bind_param("issssss", $user_id, $item_name, $description, $category, $location, $date, $image);
 
     if ($stmt->execute()) {
-        echo "Lost item posted successfully!";
+        $message = "Lost item posted successfully!";
     } else {
-        echo "Error: " . $conn->error;
+        $message = "Error: " . $conn->error;
     }
 }
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Post Lost Item</title>
+    <link rel="stylesheet" href="../assets/css/app.css">
 </head>
 <body>
+<header class="top-nav">
+    <div class="top-nav-inner">
+        <div class="brand">FoundBridge</div>
+        <nav class="nav-links">
+            <a href="../dashboard.php">Dashboard</a>
+            <a href="view_lost.php">Lost Items</a>
+            <a href="view_found.php">Found Items</a>
+            <a href="../logout.php">Logout</a>
+        </nav>
+    </div>
+</header>
 
-<h2>Post Lost Item</h2>
+<main class="app-shell">
+    <div class="page-head">
+        <h2>Report Lost Item</h2>
+        <a class="btn btn-secondary" href="../dashboard.php">Back</a>
+    </div>
 
-<form method="POST" enctype="multipart/form-data">
-    <label>Item Name:</label><br>
-    <input type="text" name="name" required><br><br>
+    <?php if ($message !== ''): ?>
+        <p class="msg <?php echo str_starts_with($message, 'Error') ? 'msg-error' : 'msg-success'; ?>">
+            <?php echo htmlspecialchars($message); ?>
+        </p>
+    <?php endif; ?>
 
-    <label>Description:</label><br>
-    <textarea name="description" required></textarea><br><br>
+    <section class="card">
+        <form method="POST" enctype="multipart/form-data">
+            <label for="name">Item Name</label>
+            <input id="name" type="text" name="name" required>
 
-    <label>Category:</label><br>
-    <input type="text" name="category"><br><br>
+            <label for="description">Description</label>
+            <textarea id="description" name="description" required></textarea>
 
-    <label>Location:</label><br>
-    <input type="text" name="location"><br><br>
+            <label for="category">Category</label>
+            <input id="category" type="text" name="category">
 
-    <label>Date Lost:</label><br>
-    <input type="date" name="date"><br><br>
+            <label for="location">Location</label>
+            <input id="location" type="text" name="location">
 
-    <label>Upload Image (optional):</label><br>
-    <input type="file" name="image" accept="image/*"><br><br>
+            <label for="date">Date Lost</label>
+            <input id="date" type="date" name="date">
 
-    <button type="submit">Submit</button>
-</form>
+            <label for="image">Upload Image (optional)</label>
+            <input id="image" type="file" name="image" accept="image/*">
 
-<br>
-<a href="../dashboard.php">Back to Dashboard</a>
-
+            <div class="actions">
+                <button type="submit" class="btn btn-primary">Submit Report</button>
+            </div>
+        </form>
+    </section>
+</main>
 </body>
 </html>

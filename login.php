@@ -2,10 +2,12 @@
 session_start();
 require 'config/database.php';
 
+$error = '';
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    $email = $_POST['email'];
-    $password = $_POST['password'];
+    $email = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
 
     $sql = "SELECT * FROM users WHERE email = ?";
     $stmt = $conn->prepare($sql);
@@ -23,35 +25,55 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['role'] = $user['role'];
 
             header("Location: dashboard.php");
-exit();
+            exit();
 
         } else {
-            echo "Invalid password!";
+            $error = "Invalid password.";
         }
     } else {
-        echo "User not found!";
+        $error = "User not found.";
     }
 }
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
+    <link rel="stylesheet" href="assets/css/app.css">
 </head>
 <body>
+<div class="auth-wrap">
+    <div class="card auth-card">
+        <div class="page-head">
+            <h2>Sign In</h2>
+            <a class="btn btn-secondary" href="index.php">Home</a>
+        </div>
+        <p class="muted">Access your FoundBridge account.</p>
 
-<h2>Login</h2>
+        <?php if (isset($_GET['msg'])) { ?>
+            <p class="msg msg-success"><?php echo htmlspecialchars($_GET['msg']); ?></p>
+        <?php } ?>
 
-<form method="POST">
-    <label>Email:</label><br>
-    <input type="email" name="email" required><br><br>
+        <?php if ($error !== '') { ?>
+            <p class="msg msg-error"><?php echo htmlspecialchars($error); ?></p>
+        <?php } ?>
 
-    <label>Password:</label><br>
-    <input type="password" name="password" required><br><br>
+        <form method="POST">
+            <label for="email">Email</label>
+            <input id="email" type="email" name="email" required>
 
-    <button type="submit">Login</button>
-</form>
+            <label for="password">Password</label>
+            <input id="password" type="password" name="password" required>
 
+            <div class="actions">
+                <button type="submit" class="btn btn-primary">Sign In</button>
+                <a class="btn btn-secondary" href="register.php">Create account</a>
+            </div>
+        </form>
+    </div>
+</div>
 </body>
 </html>
